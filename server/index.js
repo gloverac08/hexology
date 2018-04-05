@@ -586,6 +586,43 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.to(request.room).emit('newMessage', request);
   });
 
+  socket.on('postGameOption', (data) => {
+    // send message to other player
+    console.log('options data', data)
+    if (data.option === 'sameOpponent') {
+      socket.to(data.room).emit('replay')
+    } else {
+      io.to(socket.id).emit('exitGame');
+    } 
+  });
+
+  socket.on('rematch', async (data) => {
+    console.log('rematch');
+    const board = await gameInit(5, 4); // init board for new game
+    let gameIndex = uuidv4();
+    let room = data.room
+
+    const newGameBoard = {
+      board: board,
+      gameIndex: gameIndex,
+      room: room,
+      playerOneResources: {
+        gold: 10,
+        wood: 10,
+        metal: 10
+      },
+      playerTwoResources: {
+        gold: 10,
+        wood: 10,
+        metal: 10
+      }
+    }
+
+    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
+    io.to(room).emit('gameCreated', newGameBoard); // send game board to user
+
+  })
+
   socket.on('leaveRoom', async (data) => {
     console.log('in leave room')
     await io.to(data.room).emit('disconnect');
@@ -936,44 +973,7 @@ const moveUnits = async (data, socket, hexbot) => {
             }
           }
 
-          const board = await gameInit(5, 4); // init board for new game
-          let gameIndex = uuidv4();
-
-          games[gameIndex] = { // initialize game in local state, to be replaced after we refactor to use DB
-            board: board, // set board,
-            playerOneResources: { // p1 resources,
-              gold: 10,
-              wood: 10,
-              metal: 10
-            },
-            playerTwoResources: { // and p2 resources
-              gold: 10,
-              wood: 10,
-              metal: 10
-            },
-            playerOneTotalUnits: 10,
-            playerTwoTotalUnits: 10,
-          };
-
-          const newGameBoard = {
-            board: board,
-            gameIndex: gameIndex,
-            room: room,
-            playerOneResources: {
-              gold: 10,
-              wood: 10,
-              metal: 10
-            },
-            playerTwoResources: {
-              gold: 10,
-              wood: 10,
-              metal: 10
-            }
-          }
-
-          // await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
-
-          // setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
+          setTimeout(() => {io.to(room).emit('openPlayAgainModal')}, 5000);
 
         } else { // if the game is not over
           // console.log('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GAME NOT OVER YET <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n');

@@ -9,6 +9,7 @@ import LoadGame from './LoadGame.jsx';
 import Login from './Login.jsx';
 import Signup from './Signup.jsx';
 import UnitShop from './UnitShop.jsx';
+import PlayAgainModal from './PlayAgainModal.jsx';
 import DefaultState from '../store/DefaultState';
 import { Link } from 'react-router-dom';
 import { toggleLoginSignup, exitGame, setRoom, login, setHexbot, callTimer } from '../../src/actions/actions.js';
@@ -162,6 +163,7 @@ class SidebarLeft extends React.Component {
 
     return (
       <div style={styles.sidebar}>
+          <PlayAgainModal />
           <Sidebar style={{top: 0}} as={Menu} animation='scale down' width='thin' visible={menuVisible} icon='labeled' vertical inverted>
 
             <Menu.Item
