@@ -195,7 +195,7 @@ class TopBar extends React.Component {
         }
 
         <Segment.Group horizontal>
-          {this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood') ?
+          {(this.props.userPlayer && this.props.playerOneResources.hasOwnProperty('wood')) || this.props.spectator ?
             <UserPlayerBank /> :
             <Segment>
               <strong>Player One has joined!</strong>

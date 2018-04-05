@@ -971,9 +971,9 @@ const moveUnits = async (data, socket, hexbot) => {
             }
           }
 
-          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
+          // await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
 
-          setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
+          // setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
 
         } else { // if the game is not over
           // console.log('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> GAME NOT OVER YET <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n');
