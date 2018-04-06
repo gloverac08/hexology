@@ -20,7 +20,7 @@ const sendEmail = (username, email, room, message) => {
     to: email,
     subject: `${username} wants you to join a game of Hexology!`,
     text: `Hello ${email}! Your friend, who goes by ${username}, wants you to join a game of Hexology. Click this link to get started, and be sure to sign in: hexology-game.herokuapp.com/game/${room}`,
-    html: message ? `${message} <a href="http://localhost:8080/game/room?${room}">Join the game!</a>` : template
+    html: message ? `${message} <a href="http://localhost:3000/game/room?${room}">Join the game!</a>` : template
   }
 
   transporter.sendMail(mailOptions, (err, info) => {
