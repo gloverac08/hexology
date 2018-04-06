@@ -587,42 +587,42 @@ io.on('connection', async (socket) => { // initialize socket on user connection
     io.to(request.room).emit('newMessage', request);
   });
 
-  socket.on('postGameOption', (data) => {
-    // send message to other player
-    console.log('options data', data)
-    if (data.option === 'sameOpponent') {
-      socket.to(data.room).emit('replay')
-    } else {
-      io.to(socket.id).emit('exitGame');
-    } 
-  });
+  // socket.on('postGameOption', (data) => {
+  //   // send message to other player
+  //   console.log('options data', data)
+  //   if (data.option === 'sameOpponent') {
+  //     socket.to(data.room).emit('replay')
+  //   } else {
+  //     io.to(socket.id).emit('exitGame');
+  //   } 
+  // });
 
-  socket.on('rematch', async (data) => {
-    console.log('rematch');
-    const board = await gameInit(5, 4); // init board for new game
-    let gameIndex = uuidv4();
-    let room = data.room
+  // socket.on('rematch', async (data) => {
+  //   console.log('rematch');
+  //   const board = await gameInit(5, 4); // init board for new game
+  //   let gameIndex = uuidv4();
+  //   let room = data.room
 
-    const newGameBoard = {
-      board: board,
-      gameIndex: gameIndex,
-      room: room,
-      playerOneResources: {
-        gold: 10,
-        wood: 10,
-        metal: 10
-      },
-      playerTwoResources: {
-        gold: 10,
-        wood: 10,
-        metal: 10
-      }
-    }
+  //   const newGameBoard = {
+  //     board: board,
+  //     gameIndex: gameIndex,
+  //     room: room,
+  //     playerOneResources: {
+  //       gold: 10,
+  //       wood: 10,
+  //       metal: 10
+  //     },
+  //     playerTwoResources: {
+  //       gold: 10,
+  //       wood: 10,
+  //       metal: 10
+  //     }
+  //   }
 
-    await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
-    io.to(room).emit('gameCreated', newGameBoard); // send game board to user
+  //   await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
+  //   io.to(room).emit('gameCreated', newGameBoard); // send game board to user
 
-  })
+  // })
 
   socket.on('leaveRoom', async (data) => {
     await io.to(data.room).emit('disconnect');
@@ -891,7 +891,31 @@ const moveUnits = async (data, socket, hexbot) => {
             }
           }
 
-          setTimeout(() => {io.to(socket.id).emit('openPlayAgainModal')}, 5000);
+          const board = await gameInit(5, 4); // init board for new game
+          let gameIndex = uuidv4();
+
+          const newGameBoard = {
+            board: board,
+            gameIndex: gameIndex,
+            room: room,
+            playerOneResources: {
+              gold: 10,
+              wood: 10,
+              metal: 10
+            },
+            playerTwoResources: {
+              gold: 10,
+              wood: 10,
+              metal: 10
+            }
+          }
+
+          await db.createGame(room, board, gameIndex); // saves the new game & hexes in the database
+
+          setTimeout(() => io.to(room).emit('gameCreated', newGameBoard), 5000); // send game board to user
+
+
+          // setTimeout(() => {io.to(socket.id).emit('openPlayAgainModal')}, 5000);
 
         } else { // if the game is not over
           let updatedOriginPlayer = null;
