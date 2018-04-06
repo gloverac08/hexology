@@ -4,7 +4,7 @@ import { withRouter } from 'react-router';
 import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex } from 'react-hexgrid';
 import { bindActionCreators } from 'redux';
 import { List, Segment, Actions, Input, TextArea, Button, Header, Popup, Image, Modal, Content, Description, Icon, Form, Checkbox, Divider, Label, Confirm, Grid, Transition } from 'semantic-ui-react';
-import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer } from '../../src/actions/actions.js';
+import { exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer, initiateExit } from '../../src/actions/actions.js';
 import UnitShop from './UnitShop.jsx';
 import DeployTroops from './DeployTroops.jsx';
 import UserPlayerBank from './UserPlayerBank.jsx';
@@ -76,6 +76,8 @@ class TopBar extends React.Component {
   }
 
   exitGame(exit) {
+    this.props.initiateExit();
+    setTimeout(() => this.props.initiateExit(), 1000);
     if (exit === 'saveOnExit') { // saves the game in the db on exit
       this.props.socket.emit('saveExit', {
         room: this.props.room,
@@ -83,7 +85,7 @@ class TopBar extends React.Component {
         gameSaved: true
       });
       return;
-    } 
+    }
     this.props.socket.emit('saveExit', {
       room: this.props.room,
       gameIndex: this.props.gameIndex,
@@ -110,9 +112,11 @@ class TopBar extends React.Component {
       username: this.props.loggedInUser,
       email: this.props.location.state.otherPlayerInfo.email,
       message: messageDefault,
-      room: this.props.room
+      room: this.props.room,
+      gameIndex: this.props.gameIndex,
+      otherUser: this.props.location.state.otherPlayerInfo.username
     })
-    setTimeout(() => this.setState({ modalOpen: false }), 2000);
+    setTimeout(() => this.setState({ modalOpen: false }), 3000);
   }
 
   handleChange(e, {name, value}) {
@@ -124,11 +128,11 @@ class TopBar extends React.Component {
       <Segment className={'topBar'} style={{display: 'block', width:this.props.menuVisible ? '80%' : '97%', marginBottom: '-20px' }} secondary floated={'right'} raised>
         <Header as='h1'>Hexology</Header>
         <div style={{right: '10px', top: '20px', position: 'absolute'}}>
-          {this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')
+          { (this.props.loggedInUser !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources && this.props.playerOneResources.hasOwnProperty('wood')) || (this.props.location && this.props.location.search.includes('='))
             ? <Modal
               open={this.state.saveOpen}
               trigger={
-                <Button 
+                <Button
                   size='small'
                   style={{marginRight: '5px'}}
                   onClick={this.saveGame}
@@ -141,7 +145,7 @@ class TopBar extends React.Component {
             </Modal>
             : null
           }
-          {this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources.hasOwnProperty('wood')
+          { (this.props.loggedInUser !== 'anonymous' && this.props.currentPlayer !== 'anonymous' && this.props.playerTwo !== 'anonymous' && !this.props.spectator && this.props.playerOneResources.hasOwnProperty('wood')) || (this.props.location && this.props.location.search.includes('='))
             ? <span>
                 <Button size='small' onClick={this.confirm}>Exit Game</Button>
                 <Confirm
@@ -159,7 +163,7 @@ class TopBar extends React.Component {
         </div>
         <Header as='h4' style={{ marginTop: '-10px' }}>You are {this.props.userPlayer === 'player1' ? 'player one' : this.props.spectator ? 'spectating this game' : 'player two'}!</Header>
 
-        {this.props.boardState ? null :
+        {this.props.boardState || this.props.spectator ? null :
           (this.state.inviteSent ? <Segment>Invite sent to {this.state.email}</Segment> :
             <Segment>Want to play with a friend?
               <Button
@@ -178,7 +182,7 @@ class TopBar extends React.Component {
         {this.props.location.state // if the game has been loaded by player
           ? ( this.props.location.state.gameLoad
               ? (this.state.inviteSent
-                  ? <Segment>Invite sent to {this.props.location.state.otherPlayerInfo.email}</Segment>
+                  ? null
                   : <Segment>Invite <strong>{this.props.location.state.otherPlayerInfo.username}</strong> to resume this game!
                     <Button
                       size={'tiny'}
@@ -245,7 +249,16 @@ class TopBar extends React.Component {
                   </Modal.Content>
                   <Divider/>
                   <Modal.Actions>
-                    <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>
+
+                  <Modal trigger={<Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmailToResume()}>{this.state.buttonMessage}</Button>}>
+                      <Modal.Header>Invite Sent</Modal.Header>
+                      <Modal.Content>
+                        <Modal.Description>
+                          Invite sent to {this.props.location.state.otherPlayerInfo.username}
+                        </Modal.Description>
+                      </Modal.Content>
+                    </Modal>
+                    
                   </Modal.Actions>
                 </Modal></Transition>
               : <Transition animation={'pulse'} duration={5000} visible={true}><Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
@@ -303,7 +316,7 @@ const mapStateToProps = state => {
 }
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer }, dispatch);
+  return bindActionCreators({ exitGame, setRoom, deleteRoom, resetBoard, setHexbot, callTimer, initiateExit }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(TopBar));
