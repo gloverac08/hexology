@@ -891,7 +891,7 @@ const moveUnits = async (data, socket, hexbot) => {
             }
           }
 
-          setTimeout(() => {io.to(room).emit('openPlayAgainModal')}, 5000);
+          setTimeout(() => {io.to(socket.id).emit('openPlayAgainModal')}, 5000);
 
         } else { // if the game is not over
           let updatedOriginPlayer = null;

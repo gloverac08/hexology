@@ -8,8 +8,7 @@ class PlayAgainModal extends React.Component {
     this.state = {
       option: null,
       openPlayAgain: false,
-      openOpponentAgain: false,
-      openOpponentLeft: false
+      openOpponentAgain: false
     }
   }
 
@@ -17,12 +16,16 @@ class PlayAgainModal extends React.Component {
     // only do this if not a spectator
     (async () => {
       let socket = await this.props.socket;
+      let count = 0;
       if (socket) {
         socket.on('openPlayAgainModal', () => {
           console.log('in openPlayAgainModal')
-          this.setState({
-            openPlayAgain: true
-          })
+          if (count === 0) {
+            this.setState({
+              openPlayAgain: true
+            })
+          }
+          count += 1;
         });
         socket.on('sameOpponent', () => {
           console.log('in same opponent')
@@ -54,11 +57,11 @@ class PlayAgainModal extends React.Component {
   }
   
   handleClose(name) {
-    console.log('name:', name);
+    
     this.setState({
-      [name]: false
+      openPlayAgain: false
     }, () => {
-      console.log('this.state[name]', this.state[name]);
+      console.log('this.state.openPlayAgain', this.state.openPlayAgain);
     })
   }
 
@@ -114,16 +117,16 @@ class PlayAgainModal extends React.Component {
         <Modal open={this.state.openPlayAgain} size={'mini'} >
           <Modal.Header>Would you like to play again?</Modal.Header>
           <Modal.Content>
-            <Dropdown 
+            {/* <Dropdown 
               placeholder='Select option'
               options={dropDown}
               onChange={this.setValue.bind(this)}
               selection
               value={this.state.option}
-            />
+            /> */}
           </Modal.Content>
           <Modal.Actions>
-            <Button onClick={() => {this.handleSubmit()}} >Submit</Button>
+            <Button onClick={() => { this.handleClose()}} >Submit</Button>
           </Modal.Actions>
         </Modal>
         <Modal open={this.state.openOpponentAgain} size={'mini'}>
