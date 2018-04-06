@@ -139,7 +139,7 @@ const updateDbHexes = async (masterOrigin, updatedTarget, currentPlayer, updated
   let playerId = await currentPlayer[currentPlayer.length - 1];
   if (updatedOrigin.swordsmen === 0 && updatedOrigin.archers === 0 && updatedOrigin.knights === 0) { // if all units were moved from original hex, remove player as owner & remove units from hex
     await knex('hex')
-      .where(knex.raw(`'${originalOrigin[0].hex_index}' = hex_index`))
+      .where(knex.raw(`'${masterOrigin[0].hex_index}' = hex_index`))
       .update({
         player: null,
         hex_owner: null,
@@ -149,14 +149,14 @@ const updateDbHexes = async (masterOrigin, updatedTarget, currentPlayer, updated
       })
   } else { // else update original hex with units left behind by player
     await knex('hex')
-      .where(knex.raw(`${playerId} = player AND '${originalOrigin[0].hex_index}' = hex_index`))
+      .where(knex.raw(`${playerId} = player AND '${masterOrigin[0].hex_index}' = hex_index`))
       .update({
         swordsmen: updatedOrigin.swordsmen,
         archers: updatedOrigin.archers,
         knights: updatedOrigin.knights
       })
       .then(data => { // then update the hex owner
-        updateHexOwner(originalOrigin[0].hex_index, playerId);
+        updateHexOwner(masterOrigin[0].hex_index, playerId);
       })
   }
 
