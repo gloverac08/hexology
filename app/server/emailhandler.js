@@ -5,7 +5,7 @@ const sendEmail = (username, email, room, message, gameIndex, otherUser) => {
   const template = `<h1>Hexology: The Hex Game That Runs In Your Browser</h1>
 <h3>Hello ${email}!</h3>
 <p>Your friend, who goes by ${username}, wants you to join a game of Hexology. Click the link below to get started, and be sure to sign in!</p>
-<p><a href="http://localhost:8080/game/room?${room}">Join the game!</a></p>`;
+<p><a href="http://localhost:3000/game/room?${room}">Join the game!</a></p>`;
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
