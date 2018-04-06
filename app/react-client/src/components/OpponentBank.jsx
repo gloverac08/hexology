@@ -37,7 +37,7 @@ const opponentBank = (props) => {
             <Image height="100px" style={{marginBottom: '-50px'}} src="./images/gold-bar.svg" />
             <List.Content>
               <List.Header>
-                {props.userPlayer === 'player1' ? props.playerTwoResources.gold + ' gold' : props.playerOneResources.gold + ' gold'}
+                {props.userPlayer === 'player1' || props.spectator ? props.playerTwoResources.gold + ' gold' : props.playerOneResources.gold + ' gold'}
               </List.Header>
             </List.Content>
           </List.Item>
@@ -45,7 +45,7 @@ const opponentBank = (props) => {
             <Image height="100px" style={{marginBottom: '-50px'}} src="./images/wood-pile.svg" />
             <List.Content>
               <List.Header>
-                {props.userPlayer === 'player1' ? props.playerTwoResources.wood + ' wood' : props.playerOneResources.wood + ' wood'}
+                {props.userPlayer === 'player1' || props.spectator ? props.playerTwoResources.wood + ' wood' : props.playerOneResources.wood + ' wood'}
               </List.Header>
             </List.Content>
           </List.Item>
@@ -53,7 +53,7 @@ const opponentBank = (props) => {
             <Image height="100px" style={{marginBottom: '-30px'}} src="./images/metal-bar.svg" />
             <List.Content>
               <List.Header>
-                {props.userPlayer === 'player1' ? props.playerTwoResources.metal + ' metal' : props.playerOneResources.metal + ' metal'}
+                {props.userPlayer === 'player1' || props.spectator ? props.playerTwoResources.metal + ' metal' : props.playerOneResources.metal + ' metal'}
               </List.Header>
             </List.Content>
           </List.Item>
@@ -61,7 +61,7 @@ const opponentBank = (props) => {
             <Image src="./images/sword.png" />
             <List.Content>
               <List.Header>
-                {props.userPlayer === 'player1' ? props.playerTwoUnitBank.swordsmen + ' swordsmen' : props.playerOneUnitBank.swordsmen + ' swordsmen'}
+                {props.userPlayer === 'player1' || props.spectator ? props.playerTwoUnitBank.swordsmen + ' swordsmen' : props.playerOneUnitBank.swordsmen + ' swordsmen'}
               </List.Header>
             </List.Content>
           </List.Item>
@@ -69,7 +69,7 @@ const opponentBank = (props) => {
             <Image src="./images/archer.png" />
             <List.Content>
               <List.Header>
-                {props.userPlayer === 'player1' ? props.playerTwoUnitBank.archers + ' archers' : props.playerOneUnitBank.archers + ' archers'}
+                {props.userPlayer === 'player1' || props.spectator ? props.playerTwoUnitBank.archers + ' archers' : props.playerOneUnitBank.archers + ' archers'}
               </List.Header>
             </List.Content>
           </List.Item>
@@ -77,7 +77,7 @@ const opponentBank = (props) => {
             <Image src="./images/knight.png" />
             <List.Content>
               <List.Header>
-                {props.userPlayer === 'player1' ? props.playerTwoUnitBank.knights + ' knights' : props.playerOneUnitBank.knights + ' knights'}
+                {props.userPlayer === 'player1' || props.spectator ? props.playerTwoUnitBank.knights + ' knights' : props.playerOneUnitBank.knights + ' knights'}
               </List.Header>
             </List.Content>
           </List.Item>

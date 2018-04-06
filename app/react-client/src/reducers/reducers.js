@@ -58,6 +58,11 @@ const reducers = (state = defaultState, action) => {
         room: null,
         socket: null,
       }
+    case 'INITIATE-EXIT':
+      return {
+        ...state,
+        initiatedExit: !state.initiatedExit
+      }
     case 'SET-SPECTATOR':
       return {
         ...state,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { Segment, Image, Feed, Label, Button, Modal, Header, Icon, Table } from 'semantic-ui-react';
+import { Segment, Image, Feed, Label, Button, Modal, Header, Icon, Table, Statistic, Transition } from 'semantic-ui-react';
 import socketIOClient from "socket.io-client";
 import { withRouter } from 'react-router';
 import Leaderboard from './Leaderboard.jsx';
@@ -30,6 +30,8 @@ const RoomsList = props => {
         room.room.player1Losses = room.player1Losses;
         room.room.player1Email = room.player1Email;
         room.room.player1 = room.player1;
+        room.room.player1Rank = room.player1Rank;
+        room.room.spectators = room.spectators
         props.newRoom(room);
       })
       socket.on('deleteRoom', (room) => {
@@ -42,7 +44,9 @@ const RoomsList = props => {
   }
 
   refreshRooms();
-  
+
+  console.log('props.rooms:', props.rooms);
+
   return (
 
     <Feed style={{margin: 'auto', textAlign: 'center', width: '55%',  marginTop: 0, paddingTop: '20px'}}>
@@ -60,7 +64,9 @@ const RoomsList = props => {
               <Table.Header>
                 <Table.Row>
                   <Table.HeaderCell colSpan='2' style={{ textAlign: 'center' }}>
-                    {room.player1 && room.player2
+                    {room.gameType === 'private' ?
+                      `Game only joinable by invitation.` :
+                      room.player1 && room.player2
                       ? `Game Full`
                       : (<div><Icon loading name='spinner' /><span>Waiting for another player</span></div>)
                     }
@@ -73,24 +79,30 @@ const RoomsList = props => {
                   <Table.Cell>Player 1</Table.Cell>
                   <Table.Cell>
                     { room.player1 !== 'anonymous'
-                      ? <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player1}</Header>}>
-                        <Modal.Header>Profile: {' ' + room.player1}</Modal.Header>
+                      ? <Transition animation={'pulse'} duration={5000} visible={true}><Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player1}</Header>}>
+                        <Modal.Header><Icon name='user'/>{' ' + room.player1}</Modal.Header>
                         <Modal.Content>
                           <Modal.Description>
-                            {/* Rank: TBD
-                            <br/> */}
-                            Wins: {' ' + room.player1Wins}
-                            <br/>
-                            Losses: {' ' + room.player1Losses}
-                            <p/>
-                            { room.player1 !== props.loggedInUser
-                              ? null
-                              // ? <Button>Challenge {' ' + room.player1}</Button>
-                              : null
-                            }
+                              <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
+                                <Statistic>
+                                  <Statistic.Value>{' ' + room.player1Wins}</Statistic.Value>
+                                  <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
+                                </Statistic>
+                                { room.player1Rank !== undefined
+                                  ? <Statistic>
+                                      <Statistic.Value># {' ' + room.player1Rank}</Statistic.Value>
+                                      <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                                    </Statistic>
+                                  : <Statistic></Statistic>
+                                }
+                                <Statistic>
+                                  <Statistic.Value>{' ' + room.player1Losses}</Statistic.Value>
+                                  <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
+                                </Statistic>
+                              </Statistic.Group>
                           </Modal.Description>
                         </Modal.Content>
-                      </Modal>
+                      </Modal></Transition>
                       : <span><Icon name='user outline' />{' ' + room.player1}</span>
                     }
                   </Table.Cell>
@@ -100,24 +112,30 @@ const RoomsList = props => {
                   <Table.Cell>
                     { room.player2
                       ? room.player2 !== 'anonymous'
-                        ? <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player2}</Header>}>
-                          <Modal.Header>Profile: {' ' + room.player2}</Modal.Header>
+                        ? <Transition animation={'pulse'} duration={5000} visible={true}><Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}><Icon name='user' />{' ' + room.player2}</Header>}>
+                          <Modal.Header><Icon name='user'/> {' ' + room.player2}</Modal.Header>
                           <Modal.Content>
-                            <Modal.Description>
-                              {/* Rank: TBD
-                              <br/> */}
-                              Wins: {' ' + room.player2Wins}
-                              <br/>
-                              Losses: {' ' + room.player2Losses}
-                              <p/>
-                              { room.player2 !== props.loggedInUser
-                                ? null
-                                // ? <Button>Challenge {' ' + room.player2}</Button>
-                                : null
-                              }
+                            <Modal.Description style={{fontSize: '14pt', textAlign: 'center', margin: 'auto'}}>
+                              <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
+                                  <Statistic>
+                                    <Statistic.Value>{' ' + room.player2Wins}</Statistic.Value>
+                                    <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
+                                  </Statistic>
+                                  { room.player2Rank !== undefined
+                                    ? <Statistic>
+                                      <Statistic.Value># {' ' + room.player2Rank}</Statistic.Value>
+                                      <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                                    </Statistic>
+                                    : <Statistic></Statistic>
+                                  }
+                                  <Statistic>
+                                    <Statistic.Value>{' ' + room.player2Losses}</Statistic.Value>
+                                    <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
+                                  </Statistic>
+                                </Statistic.Group>
                             </Modal.Description>
                           </Modal.Content>
-                        </Modal>
+                        </Modal></Transition>
                         : <span><Icon name='user outline' />{' ' + room.player2}</span>
                       : ' Not yet assigned'
                     }
@@ -125,7 +143,7 @@ const RoomsList = props => {
                 </Table.Row>
                 <Table.Row colSpan='2'>
                   <Table.HeaderCell colSpan='2'>
-                    {room.length === 1 ?
+                    {room.length === 1  && room.gameType === 'public' ?
                       <Button fluid onClick={() => joinGame(roomName)} color="green">Join Game</Button> :
                       <Button fluid color="red" onClick={() => joinGame(roomName, 'spectator', props.rooms[roomName].gameIndex)}>Watch Game</Button>
                     }
@@ -134,7 +152,7 @@ const RoomsList = props => {
             </Table.Body>
             </Table>
           )
-        
+
         })
         : <div>No games currently open. Start a new one!</div>}
       </Feed>

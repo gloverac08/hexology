@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition } from 'semantic-ui-react';
+import { Form, Select, Divider, Sidebar, Segment, Button, Menu, Image, Icon, Header, Modal, Transition, Statistic } from 'semantic-ui-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -31,8 +31,10 @@ class SidebarLeft extends React.Component {
 
       userWins: null,
       userLosses: null,
+      userRank: null,
       disabled: window.location.href.indexOf('game') === -1 ? false : true,
-      hexbot: false
+      hexbot: 'no',
+      spectators: 'yes'
     }
 
     this.toggleMenu = this.toggleMenu.bind(this);
@@ -52,7 +54,8 @@ class SidebarLeft extends React.Component {
       // console.log('data yo: ',data)
       this.setState({
         userWins: data.user.wins,
-        userLosses: data.user.losses
+        userLosses: data.user.losses,
+        userRank: data.user.rank
       });
     })
   }
@@ -73,17 +76,20 @@ class SidebarLeft extends React.Component {
     (async () => {
       let username = await this.props.loggedInUser;
       if (username) {
-        if (this.state.hexbot) {
+        if (this.state.hexbot === 'yes') {
           this.props.setHexbot(true);
           this.props.socket.emit('botGame', {
             username: this.props.setLoggedInUser || 'anonymous',
-            type: 'private'
+            type: 'private',
+            spectators: this.state.spectators
           })
         } else {
           this.props.socket.emit('newGame', {
             gameType: this.state.gameType,
+            gameIndex: this.props.gameIndex,
             username: this.props.loggedInUser,
-            socketId: this.props.socket.id
+            socketId: this.props.socket.id,
+            spectators: this.state.spectators
           });
         }
         this.props.socket.on('newGame', data => {
@@ -105,7 +111,10 @@ class SidebarLeft extends React.Component {
   }
 
   logout() {
-    axios.post('/logout')
+    axios.post('/logout', {
+      gameIndex: this.props.gameIndex,
+      room: this.props.room
+    })
       .then(data => {
         this.props.login('anonymous');
         this.setState({ logoutModal: true });
@@ -124,11 +133,13 @@ class SidebarLeft extends React.Component {
   showLoadGames() {
     if (this.state.loadGameModal) {
       return (
-        <LoadGame
-          open={this.state.loadGameModal}
-          close={this.toggleLoadGames}
-          username={this.props.loggedInUser}
-        />
+        <Transition animation={'pulse'} duration={5000} visible={true}>
+          <LoadGame
+            open={this.state.loadGameModal}
+            close={this.toggleLoadGames}
+            username={this.props.loggedInUser}
+          />
+        </Transition>
       )
     }
   }
@@ -137,7 +148,7 @@ class SidebarLeft extends React.Component {
     const showRules = () => { // Shows rules modal if rules menu item is clicked
       if (this.state.rules) {
         return (
-          <Rules open={this.state.rules} close={this.toggleRules} />
+            <Rules open={this.state.rules} close={this.toggleRules} />
         )
       }
     }
@@ -206,11 +217,21 @@ class SidebarLeft extends React.Component {
                   <Modal open={this.state.profile} onClose={ () => this.setState({ profile: !this.state.profile })}>
                     <Modal.Header><Icon name='user' /> {this.props.loggedInUser}</Modal.Header>
                     <Modal.Content>
-                      <Modal.Description style={{fontSize: '14pt'}}>
-                        <strong>Wins:</strong> {this.state.userWins}
-                        <br/>
-                        <strong>Losses:</strong> {this.state.userLosses}
-                        <p/>
+                      <Modal.Description style={{fontSize: '14pt', textAlign: 'center', margin: 'auto'}}>
+                        <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
+                          <Statistic>
+                            <Statistic.Value>{this.state.userWins}</Statistic.Value>
+                            <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value># {this.state.userRank}</Statistic.Value>
+                            <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value>{this.state.userLosses}</Statistic.Value>
+                            <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
+                          </Statistic>
+                        </Statistic.Group>
                       </Modal.Description>
                     </Modal.Content>
                   </Modal>
@@ -255,6 +276,7 @@ class SidebarLeft extends React.Component {
             </Menu.Item>
           </Sidebar>
 
+          <Transition animation={'pulse'} duration={5000} visible={true}>
           <Modal
             open={this.state.newGameModalOpen}
             size={'tiny'}
@@ -267,8 +289,8 @@ class SidebarLeft extends React.Component {
                     <Form.Select
                       required
                       label
-                      placeholder={'Public'}
-                      options={[{key: 'private', text: 'Private', value: 'private'}, {key: 'public', text: 'Public', value: 'public'}]}
+                      defaultValue={'public'}
+                      options={[{key: 'public', text: 'Public', value: 'public'}, {key: 'private', text: 'Private (not joinable except by invite)', value: 'private'}]}
                       name={'gameType'}
                       onChange={this.handleChange.bind(this)}
                       label='Game Type'
@@ -276,8 +298,17 @@ class SidebarLeft extends React.Component {
                     <Form.Select
                       required
                       label
-                      placeholder={'No'}
-                      options={[{ key: 'yes', text: 'Yes', value: 'yes' }, { key: 'no', text: 'No', value: 'no' }]}
+                      defaultValue={'yes'}
+                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                      name={'spectators'}
+                      onChange={this.handleChange.bind(this)}
+                      label='Allow Spectators'
+                     />
+                    <Form.Select
+                      required
+                      label
+                      defaultValue={'no'}
+                      options={[{ key: 'no', text: 'No', value: 'no' }, { key: 'yes', text: 'Yes', value: 'yes' }]}
                       name={'timer'}
                       onChange={this.handleChange.bind(this)}
                       label='Play With Timer?'
@@ -285,13 +316,13 @@ class SidebarLeft extends React.Component {
                     <Form.Select
                       required
                       label
-                      placeholder={'No'}
-                      options={[{key: 'yes', text: 'Yes', value: 'yes'}, {key: 'no', text: 'No', value: 'no'}]}
+                      defaultValue={'no'}
+                      options={[{key: 'no', text: 'No', value: 'no'}, {key: 'yes', text: 'Yes', value: 'yes'}]}
                       name={'hexbot'}
                       onChange={this.handleChange.bind(this)}
                       label='Play Against Hexbot?'
                      />
-                   <Image src='https://lh3.googleusercontent.com/-Eorum9V_AXA/AAAAAAAAAAI/AAAAAAAAAAc/1qvQou0NgpY/s90-c-k-no/photo.jpg'/>
+                   <Image src='./images/hexbot.jpg'/>
                 </Form>
               </Modal.Description>
             </Modal.Content>
@@ -300,6 +331,8 @@ class SidebarLeft extends React.Component {
               <Button color={'green'} onClick={this.newGame.bind(this)}>Start Game</Button>
             </Modal.Actions>
           </Modal>
+          </Transition>
+          <Transition animation={'pulse'} duration={5000} visible={true}>
           <Modal
             open={this.state.logoutModal}
             size={'tiny'}
@@ -312,6 +345,7 @@ class SidebarLeft extends React.Component {
               </Modal.Description>
             </Modal.Content>
           </Modal>
+          </Transition>
 
             {showRules()}
             {this.showLoadGames()}
@@ -331,7 +365,9 @@ const mapStateToProps = (state) => {
     playerTwoResources: state.state.playerTwoResources,
     showLogin: state.state.showLogin,
     loggedInUser: state.state.loggedInUser,
-    spectator: state.state.spectator
+    spectator: state.state.spectator,
+    gameIndex: state.state.gameIndex,
+    room: state.state.room
   }
 }
 

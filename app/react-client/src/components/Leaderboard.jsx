@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Table, Icon, Button, Modal, Form, Divider, Transition } from 'semantic-ui-react';
+import { Header, Table, Icon, Button, Modal, Form, Divider, Transition, Statistic } from 'semantic-ui-react';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -14,6 +14,8 @@ class Leaderboard extends React.Component {
       buttonMessage: 'Invite',
       modalOpen: false,
       email: '',
+      room: null,
+      user: ''
     }
 
     this.getUsers = this.getUsers.bind(this);
@@ -24,6 +26,7 @@ class Leaderboard extends React.Component {
 
   setUser(email, username) {
     this.setState({
+      user: username,
       modalOpen: true
     });
 
@@ -52,7 +55,7 @@ class Leaderboard extends React.Component {
   }
 
   sendEmail() {
-    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!' });
+    this.setState({ inviteSent: true, buttonMessage: 'Invite sent!', [this.state.user]: true });
     let messageDefault = this.state.message ? this.state.message : 'Hello there! Please join me for an awesome game of Hexology!';
     this.props.socket.emit('sendEmail', {
       username: this.props.loggedInUser,
@@ -60,7 +63,19 @@ class Leaderboard extends React.Component {
       message: messageDefault,
       room: this.state.room
     });
-    setTimeout(() => this.setState({ modalOpen: false }), 2000);
+    setTimeout(() => {this.setState({ modalOpen: false, inviteSent: false })
+      this.props.socket.emit('newGame', {
+        username: this.props.loggedInUser,
+        gameType: 'public'
+      });
+      this.props.history.push({
+        pathname: `/game/room?${this.state.room}`,
+        state: {
+          extra: 'create',
+          roomToJoin: this.state.room
+        }
+      });
+    }, 2000);
   }
 
   handleChange(e, {name, value}) {
@@ -82,7 +97,7 @@ class Leaderboard extends React.Component {
         compact
         celled
         striped
-        style={{ margin: 'auto' }}
+        style={{ margin: 'auto', width: '100%' }}
       >
 
         <Table.Header>
@@ -113,22 +128,34 @@ class Leaderboard extends React.Component {
                   <Modal trigger={<Header as='h4' style={{cursor: 'pointer'}}>{user.username}</Header>}>
                     <Modal.Header><Icon name="user" />{user.username}</Modal.Header>
                     <Modal.Content>
-                      <Modal.Description style={{fontSize: '14pt'}}>
-                        <strong>Rank:</strong> {key + 1}
-                        <br/>
-                        <strong>Wins:</strong> {user.wins}
-                        <br/>
-                        <strong>Losses:</strong> {user.losses}
-                        <p/>
+                      <Modal.Description style={{fontSize: '14pt', textAlign: 'center', margin: 'auto'}}>
+                        <Statistic.Group widths='three' style={{marginRight: '15%', marginLeft: '15%'}}>
+                          <Statistic>
+                            <Statistic.Value>{user.wins}</Statistic.Value>
+                            <Statistic.Label><Icon name='winner' />Wins</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value># {key + 1}</Statistic.Value>
+                            <Statistic.Label><Icon name='gamepad' />Rank</Statistic.Label>
+                          </Statistic>
+                          <Statistic>
+                            <Statistic.Value>{user.losses}</Statistic.Value>
+                            <Statistic.Label><Icon name='tint' />Losses</Statistic.Label>
+                          </Statistic>
+                        </Statistic.Group>
                         {this.props.loggedInUser !== 'anonymous' && this.props.loggedInUser !== user.username
-                          ? <Button color='blue' key='blue' onClick={ () =>
-                              this.setUser(user.email, user.username)
-                            }>Challenge {user.username}!</Button>
+                          ? <Button
+                              disabled={this.state[user.username] || false}
+                              color='blue'
+                              key='blue'
+                              onClick={ () => this.setUser(user.email, user.username) }
+                              style={{marginTop: '5%'}}
+                              icon
+                            ><Icon name='mail outline'/> Challenge {user.username}!</Button>
                           : null
                         }
-
-                        <Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
-                          <Modal.Header>Challenge {user.username}!</Modal.Header>
+                        <Transition animation={'pulse'} duration={5000} visible={true}><Modal open={this.state.modalOpen} closeIcon onClose={() => this.setState({ modalOpen: false })}>
+                          <Modal.Header><Icon name='envelope'/> Challenge {user.username}!</Modal.Header>
                           <Modal.Content>
                             <Modal.Description>
                               <Form size={'large'} key={'small'}>
@@ -145,10 +172,12 @@ class Leaderboard extends React.Component {
                           </Modal.Content>
                           <Divider/>
                           <Modal.Actions>
-                            <Button color={'blue'} onClick={() => this.state.inviteSent ? null : this.sendEmail()}>{this.state.buttonMessage}</Button>
+                            <Button
+                              color={'blue'}
+                              onClick={() => this.state.inviteSent ? null : this.sendEmail()}
+                            >{this.state.buttonMessage}</Button>
                           </Modal.Actions>
-                        </Modal>
-
+                        </Modal></Transition>
                       </Modal.Description>
                     </Modal.Content>
                   </Modal>
